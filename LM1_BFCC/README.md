@@ -1,7 +1,13 @@
-# LM2: Assignment Programming GoLang ECB & OFB Python CBC & CBF
+# LM1: Assignment Brute Force Ceasar Cipher
 
-Using GoLang write a program to perform simple ECB and OFB. You can hardcode the codebook or read it from a file. Accept the plaintext from the user and display details about the process.
+Using what you learned from the lecture create two Projects: BFCC_Python and BF_CC_GoLang that will perform brute force on a message.
 
-Using Python write a program to perform CBC and CBF.  Accept the plaintext from the user and display details about the process.
+You can work together with your pair on the project.  You need to upload your projects to github.
 
-You can work together with your pair on the project.  You need to upload your project to github and provide a screen capture png of it running.
+Provide the following
+
+* github link to BFCC_Python
+* github link to BF_CC_GoLang
+* BFCC_Python png screenshot of it working
+* BF_CC_GoLang png screenshot of it working
+
