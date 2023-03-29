@@ -28,6 +28,10 @@ def main():
     iv = os.urandom(16)
     print("Plaintext:", plaintext)
     
+    # Printing Key and IV
+    print(f'Key: {key}')
+    print(f'IV: {iv}')
+    
     # CBC mode encryption and decryption
     ciphertext = cbc_encrypt(plaintext.encode('utf-8'), key, iv)
     print("CBC Mode")
