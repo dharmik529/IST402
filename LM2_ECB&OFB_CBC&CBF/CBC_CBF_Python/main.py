@@ -30,14 +30,14 @@ def main():
     
     # CBC mode encryption and decryption
     ciphertext = cbc_encrypt(plaintext.encode('utf-8'), key, iv)
-    print("CBC Mode:")
+    print("CBC Mode")
     print("Ciphertext:", ciphertext.hex())
     decrypted_plaintext = cbc_decrypt(ciphertext, key, iv).decode()
     print("Decrypted plaintext:", decrypted_plaintext)
 
     # CFB mode encryption and decryption
     ciphertext = cfb_encrypt(plaintext.encode('utf-8'), key, iv)
-    print("CFB Mode:")
+    print("\nCFB Mode")
     print("Ciphertext:", ciphertext.hex())
     decrypted_plaintext = cfb_decrypt(ciphertext, key, iv).decode()
     print("Decrypted plaintext:", decrypted_plaintext)
