@@ -1,33 +1,46 @@
 from Cryptodome.Cipher import AES
+from Cryptodome.Util.Padding import pad, unpad
 import os
 
-# Initialization Vector (IV) for CBC mode
-IV = os.urandom(16)
+def cbc_encrypt(plaintext, key, iv):
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    ciphertext = cipher.encrypt(pad(plaintext, AES.block_size))
+    return ciphertext
 
-# Key for AES encryption
-key = os.urandom(16)
+def cbc_decrypt(ciphertext, key, iv):
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    plaintext = unpad(cipher.decrypt(ciphertext), AES.block_size)
+    return plaintext
 
-# Create AES cipher objects for CBC and CFB modes
-cbc_cipher = AES.new(key, AES.MODE_CBC, IV)
-cfb_cipher = AES.new(key, AES.MODE_CFB, IV)
+def cfb_encrypt(plaintext, key, iv):
+    cipher = AES.new(key, AES.MODE_CFB, iv)
+    ciphertext = cipher.encrypt(plaintext)
+    return ciphertext
 
-# Get input plaintext from user
-plaintext = input("Enter the plaintext: ")
+def cfb_decrypt(ciphertext, key, iv):
+    cipher = AES.new(key, AES.MODE_CFB, iv)
+    plaintext = cipher.decrypt(ciphertext)
+    return plaintext
 
-# Pad the plaintext to a multiple of 16 bytes (the AES block size)
-if len(plaintext) % 16 != 0:
-    plaintext = plaintext.ljust(len(plaintext) + 16 - len(plaintext) % 16)
+def main():
+    plaintext = input("Enter plaintext to encrypt: ")
+    key = os.urandom(16)
+    iv = os.urandom(16)
+    print("Plaintext:", plaintext)
+    
+    # CBC mode encryption and decryption
+    ciphertext = cbc_encrypt(plaintext.encode('utf-8'), key, iv)
+    print("CBC Mode:")
+    print("Ciphertext:", ciphertext.hex())
+    decrypted_plaintext = cbc_decrypt(ciphertext, key, iv).decode()
+    print("Decrypted plaintext:", decrypted_plaintext)
 
-# Encrypt the plaintext using CBC mode
-cbc_ciphertext = cbc_cipher.encrypt(plaintext.encode('utf-8'))
+    # CFB mode encryption and decryption
+    ciphertext = cfb_encrypt(plaintext.encode('utf-8'), key, iv)
+    print("CFB Mode:")
+    print("Ciphertext:", ciphertext.hex())
+    decrypted_plaintext = cfb_decrypt(ciphertext, key, iv).decode()
+    print("Decrypted plaintext:", decrypted_plaintext)
 
-# Encrypt the plaintext using CFB mode
-cfb_ciphertext = cfb_cipher.encrypt(plaintext.encode('utf-8'))
-
-# Print the results
-print("Plaintext:", plaintext)
-print("IV (for CBC mode):", IV.hex())
-print("Key:", key.hex())
-print("Ciphertext (CBC mode):", cbc_ciphertext.hex())
-print("Ciphertext (CFB mode):", cfb_ciphertext.hex())
-
+if __name__ == '__main__':
+    main()
