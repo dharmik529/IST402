@@ -7,6 +7,11 @@ import (
     "fmt"
 )
 
+//These are two helper functions that add padding to plaintext 
+//and remove padding from ciphertext, respectively. Padding is 
+//used to ensure that the plaintext is a multiple of the block size, 
+//which is 8 bytes for DES.
+
 func pad(plaintext []byte, blockSize int) []byte {
     padding := blockSize - (len(plaintext) % blockSize)
     padtext := bytes.Repeat([]byte{byte(padding)}, padding)
