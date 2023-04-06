@@ -1,69 +1,39 @@
 package main
 
-import (
-    "bytes"
-    "crypto/cipher"
-    "crypto/des"
-    "fmt"
-)
+import "fmt"
 
-//These are two helper functions that add padding to plaintext 
-//and remove padding from ciphertext, respectively. Padding is 
-//used to ensure that the plaintext is a multiple of the block size, 
-//which is 8 bytes for DES.
+var codebook = [4][2]int{{0b00, 0b01}, {0b01, 0b10}, {0b10, 0b11}, {0b11, 0b00}}
+var codebook2 = [4][2]int{{0b00, 0b010}, {0b01, 0b00}, {0b10, 0b01}, {0b11, 0b11}}
+var message = [4]int{0b00, 0b01, 0b10, 0b11}
 
-func pad(plaintext []byte, blockSize int) []byte {
-    padding := blockSize - (len(plaintext) % blockSize)
-    padtext := bytes.Repeat([]byte{byte(padding)}, padding)
-    return append(plaintext, padtext...)
+func codebookLookup(xor int) int {
+	for i := 0; i < len(codebook); i++ {
+		if codebook[i][0] == xor {
+			return codebook[i][1]
+		}
+	}
+	return 0
 }
 
-func unpad(padded []byte) []byte {
-    padding := int(padded[len(padded)-1])
-    return padded[:len(padded)-padding]
+func codebookReverseLookup(value int) int {
+	for i := 0; i < len(codebook); i++ {
+		if codebook[i][1] == value {
+			return codebook[i][0]
+		}
+	}
+	return 0
 }
 
 func main() {
-    // ECB example
-    key := []byte("01234567") // 8-byte key
-    plaintext := []byte("Hello world!")
-    fmt.Println("Plaintext:", string(plaintext))
-
-    plaintext = pad(plaintext, des.BlockSize)
-    block, err := des.NewCipher(key)
-    if err != nil {
-        panic(err)
-    }
-
-    ciphertext := make([]byte, len(plaintext))
-    for i := 0; i < len(plaintext); i += block.BlockSize() {
-        block.Encrypt(ciphertext[i:], plaintext[i:])
-    }
-    fmt.Printf("ECB encrypted: %x\n", ciphertext)
-
-    decryptedtext := make([]byte, len(ciphertext))
-    for i := 0; i < len(ciphertext); i += block.BlockSize() {
-        block.Decrypt(decryptedtext[i:], ciphertext[i:])
-    }
-    decryptedtext = unpad(decryptedtext)
-    fmt.Println("ECB decrypted:", string(decryptedtext))
-
-    // OFB example
-    iv := []byte("76543210") // 8-byte initialization vector
-    ofb := cipher.NewOFB(block, iv)
-
-    plaintext = []byte("Hello world!")
-    fmt.Println("Plaintext:", string(plaintext))
-
-    plaintext = pad(plaintext, des.BlockSize)
-    ciphertext = make([]byte, len(plaintext))
-    ofb.XORKeyStream(ciphertext, plaintext)
-    fmt.Printf("OFB encrypted: %x\n", ciphertext)
-
-    decryptedtext = make([]byte, len(ciphertext))
-    ofb = cipher.NewOFB(block, iv)
-    ofb.XORKeyStream(decryptedtext, ciphertext)
-    decryptedtext = unpad(decryptedtext)
-    fmt.Println("OFB decrypted:", string(decryptedtext))
+	fmt.Println("Codebook page 1:")
+	for i, m := range message {
+		cipheredValue := codebookLookup(m)
+		fmt.Printf("Block %d ciphered: %b -> %b\n", i+1, m, cipheredValue)
+	}
+	fmt.Println("Decrypting...")
+	for i, c := range codebook2 {
+		decryptedValue := codebookReverseLookup(c[1])
+		fmt.Printf("Block %d decrypted: %b -> %b\n", i+1, c[0], decryptedValue)
+	}
 }
 
