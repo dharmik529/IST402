@@ -1,4 +1,4 @@
-# IST 402
+# IST 402 Emerging Technology (Network Security)
 
 <details open>
 <summary>Assignments</summary>
