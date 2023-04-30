@@ -1,79 +1,102 @@
 package main
 
+// LM6 - ECC in GoLang
+// IST 402
+
 import (
 	"bufio"
-	"crypto/aes"
-	"crypto/cipher"
-	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"io"
 	"os"
 	"strings"
 )
 
 func main() {
-	// Generate a random curve for elliptic-curve cryptography
+	// Generate a random curve
 	curve := elliptic.P256()
-	// Generate a new private key using the chosen curve
-	privateKey, err := ecdsa.GenerateKey(curve, rand.Reader)
+
+	// Generate a private key
+	privateKey, x, y, err := elliptic.GenerateKey(curve, rand.Reader)
 	if err != nil {
 		panic(err)
 	}
 
-	// Extract the public key from the private key
-	publicKey := &privateKey.PublicKey
+	// Generate a public key
+	// publicKey := elliptic.Marshal(curve, x, y)
 
-	// Get input from user
-	fmt.Print("Please enter the message you wish to encrypt: ")
+	// Get user input
+	fmt.Print("Enter a string to encrypt: ")
 	reader := bufio.NewReader(os.Stdin)
 	input, err := reader.ReadString('\n')
 	if err != nil {
 		panic(err)
 	}
-	// Remove newline character from input
-	input = strings.TrimSpace(input)
 
-	// Convert input to a byte slice
+	// Remove newline character from input
+	input = strings.TrimSuffix(input, "\n")
+
+	// Convert input to bytes
 	message := []byte(input)
 
-	// Generate a random nonce for use with AES-GCM encryption
-	nonce := make([]byte, 12)
-	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-		panic(err)
-	}
-
-	// Generate a shared secret between the private and public keys
-	sharedSecretX, _ := curve.ScalarMult(publicKey.X, publicKey.Y, privateKey.D.Bytes())
-	sharedSecret := sharedSecretX.Bytes()
-
-	// Encrypt the message using AES-GCM
-	block, err := aes.NewCipher(sharedSecret)
+	// Generate a random number k
+	k, err := rand.Int(rand.Reader, curve.Params().N)
 	if err != nil {
 		panic(err)
 	}
 
-	aesGcm, err := cipher.NewGCMWithNonceSize(block, 12)
-	if err != nil {
-		panic(err)
+	// Calculate the ephemeral public key R = k * G
+	rx, ry := curve.ScalarBaseMult(k.Bytes())
+	R := elliptic.Marshal(curve, rx, ry)
+
+	// Calculate the shared secret S = (x,y) * k
+	Sx, Sy := curve.ScalarMult(x, y, k.Bytes())
+	S := elliptic.Marshal(curve, Sx, Sy)
+
+	// Calculate the hash of the shared secret as the symmetric key K
+	hash := Hash(S)
+	K := hash[:16] // Use the first 16 bytes as the key for simplicity
+
+	// Encrypt the message using XOR with the symmetric key K
+	ciphertext := make([]byte, len(message))
+	for i := range message {
+		ciphertext[i] = message[i] ^ K[i%len(K)]
 	}
 
-	ciphertext := aesGcm.Seal(nil, nonce, message, nil)
-
-	// Convert the ciphertext to a hexadecimal string for display
+	// Convert ciphertext and ephemeral public key to hexadecimal strings
 	hexCiphertext := hex.EncodeToString(ciphertext)
+	hexR := hex.EncodeToString(R)
 
-	// Display the encrypted message to the user
+	// Print the encrypted message and ephemeral public key
 	fmt.Printf("Encrypted message: %s\n", hexCiphertext)
+	fmt.Printf("Ephemeral public key: %s\n", hexR)
 
-	// Decrypt the ciphertext using the same nonce and shared secret
-	plaintext, err := aesGcm.Open(nil, nonce, ciphertext, nil)
-	if err != nil {
-		panic(err)
+	// Decode the ephemeral public key and calculate the shared secret
+	R, _ = hex.DecodeString(hexR)
+	rx, ry = elliptic.Unmarshal(curve, R)
+	Sx, Sy = curve.ScalarMult(rx, ry, privateKey)
+
+	// Calculate the hash of the shared secret as the symmetric key K
+	S = elliptic.Marshal(curve, Sx, Sy)
+	hash = Hash(S)
+	K = hash[:16] // Use the first 16 bytes as the key for simplicity
+
+	// Decrypt the ciphertext using XOR with the symmetric key K
+	ciphertext, _ = hex.DecodeString(hexCiphertext)
+	plaintext := make([]byte, len(ciphertext))
+	for i := range ciphertext {
+		plaintext[i] = ciphertext[i] ^ K[i%len(K)]
 	}
 
-	// Display the decrypted message to the user
+	// Print the decrypted plaintext
 	fmt.Printf("Decrypted message: %s\n", plaintext)
 }
+
+// Hash calculates the SHA-256 hash of a byte slice
+func Hash(data []byte) []byte {
+	hash := sha256.Sum256(data)
+	return hash[:]
+}
+
