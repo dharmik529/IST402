@@ -8,5 +8,6 @@
 - [LM3: Assignment Client GoLang TLS Programming](https://github.com/dharmik529/IST402/tree/main/LM3_TLS)
 - [LM4: Assignment ChaCha20 GoLang Programming](https://github.com/dharmik529/IST402/tree/main/LM4_ChaCha20)
 - [LM5: Enigma Development: Paired Assignment](https://github.com/dharmik529/IST402/tree/main/LM5_EnigmaDevelopment)
-
+- [LM6: ECC Using GoLang Programming](https://github.com/dharmik529/IST402/tree/main/LM6_ECC)
+- [LM7: Final Paired GoLang Project Personalized Enigma Machine](https://github.com/dharmik529/IST402/tree/main/LM7_EnigmaMachine)
 </details>
